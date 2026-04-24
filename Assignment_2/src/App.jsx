@@ -3,7 +3,7 @@ import './App.css';
 
 import Footer from './components/Footer';
 import Header from './components/Header';
-import Nav from './components/Nav';
+import AppNavigation from './components/AppNavigation';
 import Search from './pages/Search';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -12,9 +12,9 @@ import Home from './pages/Home';
 
 function AppLayout() {
   return (
-    <div className="App">
+    <div className="App" style={{ width: "100%" }}>
       <Header />
-      <Nav />
+      <AppNavigation />
       <Outlet />
       <Footer />
     </div>

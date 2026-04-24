@@ -1,5 +1,94 @@
-import React from "react";
+import { useState } from "react";
+import { TextField, Button, Typography, Box, Alert } from "@mui/material";
+import { Link } from "react-router-dom";
+
+const API_URL = "http://4.237.58.241:3000";
 
 export default function Register() {
-  return <h2>Register</h2>;
+  const [emailValue, setEmailValue] = useState("");
+  const [passwordValue, setPasswordValue] = useState("");
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  function registerUser() {
+    fetch(`${API_URL}/user/register`, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: emailValue,
+        password: passwordValue,
+      }),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.error) {
+          setError(res.message);
+          setSuccess(null);
+        } else {
+          setSuccess("User successfully registered");
+          setError(null);
+        }
+      });
+  }
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "80vh",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          width: "100%",
+          maxWidth: 400,
+          p: 4,
+          boxShadow: 3,
+          borderRadius: 2,
+        }}
+      >
+        <Typography variant="h4" textAlign="center" fontWeight={700}>
+          Register
+        </Typography>
+
+        {error && <Alert severity="error">{error}</Alert>}
+        {success && <Alert severity="success">{success}</Alert>}
+
+        <TextField
+          label="Email"
+          type="text"
+          value={emailValue}
+          onChange={(e) => setEmailValue(e.target.value)}
+          fullWidth
+        />
+
+        <TextField
+          label="Password"
+          type="password"
+          value={passwordValue}
+          onChange={(e) => setPasswordValue(e.target.value)}
+          fullWidth
+        />
+
+        <Button variant="contained" onClick={registerUser} fullWidth>
+          Submit
+        </Button>
+
+        <Typography textAlign="center">
+          Already a member?{" "}
+          <Link to="/login" style={{ color: "#1976d2" }}>
+            Click here to Login!
+          </Link>
+        </Typography>
+      </Box>
+    </Box>
+  );
 }

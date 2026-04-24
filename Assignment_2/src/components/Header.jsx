@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 
 export default function Header() {
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ width: "100%" }}>
       <Toolbar>
         <Typography variant="h6">
           Rental Search

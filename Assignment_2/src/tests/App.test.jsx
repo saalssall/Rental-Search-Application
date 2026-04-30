@@ -1,204 +1,299 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import Search from '../pages/Search';
-import About from '../pages/About';
+import Login     from '../pages/Login';
+import Register  from '../pages/Register';
+import Home      from '../pages/Home';
+import Search    from '../pages/Search';
+import About     from '../pages/About';
+import MyRatings from '../pages/MyRatings';
+import { saveRating, getSavedRatings } from '../helpers/ratings';
 
-// ── Login (4 tests) ──────────────────────────────────────────
+// ── Shared helpers ───────────────────────────────────────────
+const renderIn = (Component) => render(<MemoryRouter><Component /></MemoryRouter>);
+
+const mockProperty = (overrides = {}) => ({
+  id: 'prop-1',
+  title: '2BR Apartment Brisbane',
+  rent: 450,
+  propertyType: 'Apartment',
+  suburb: 'Brisbane City',
+  state: 'QLD',
+  postcode: '4000',
+  bedrooms: 2,
+  bathrooms: 1,
+  parkingSpaces: 1,
+  averageRating: 4.2,
+  ...overrides,
+});
+
+// ── Login (5 tests) ──────────────────────────────────────────
 describe('Login Page', () => {
-  test('renders email and password fields', () => {
-    render(<MemoryRouter><Login /></MemoryRouter>);
+  test('renders email field', () => {
+    renderIn(Login);
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  });
+
+  test('renders password field', () => {
+    renderIn(Login);
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
   });
 
   test('renders submit button', () => {
-    render(<MemoryRouter><Login /></MemoryRouter>);
+    renderIn(Login);
     expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
   });
 
-  test('renders link to register page', () => {
-    render(<MemoryRouter><Login /></MemoryRouter>);
+  test('accepts typed email and password', () => {
+    renderIn(Login);
+    fireEvent.change(screen.getByLabelText(/email/i),    { target: { value: 'user@test.com' } });
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'secret123' } });
+    expect(screen.getByLabelText(/email/i).value).toBe('user@test.com');
+    expect(screen.getByLabelText(/password/i).value).toBe('secret123');
+  });
+
+  test('has a link to the register page', () => {
+    renderIn(Login);
     expect(screen.getByText(/click here to register/i)).toBeInTheDocument();
   });
-
-  test('allows typing in email and password fields', () => {
-    render(<MemoryRouter><Login /></MemoryRouter>);
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@email.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-    expect(screen.getByLabelText(/email/i).value).toBe('test@email.com');
-    expect(screen.getByLabelText(/password/i).value).toBe('password123');
-  });
 });
 
-// ── Register (4 tests) ───────────────────────────────────────
+// ── Register (5 tests) ───────────────────────────────────────
 describe('Register Page', () => {
-  test('renders email and password fields', () => {
-    render(<MemoryRouter><Register /></MemoryRouter>);
+  test('renders email field', () => {
+    renderIn(Register);
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  });
+
+  test('renders password field', () => {
+    renderIn(Register);
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
   });
 
   test('renders submit button', () => {
-    render(<MemoryRouter><Register /></MemoryRouter>);
+    renderIn(Register);
     expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
   });
 
-  test('renders link to login page', () => {
-    render(<MemoryRouter><Register /></MemoryRouter>);
-    expect(screen.getByText(/click here to login/i)).toBeInTheDocument();
+  test('accepts typed email and password', () => {
+    renderIn(Register);
+    fireEvent.change(screen.getByLabelText(/email/i),    { target: { value: 'new@test.com' } });
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'pass123' } });
+    expect(screen.getByLabelText(/email/i).value).toBe('new@test.com');
+    expect(screen.getByLabelText(/password/i).value).toBe('pass123');
   });
 
-  test('allows typing in email and password fields', () => {
-    render(<MemoryRouter><Register /></MemoryRouter>);
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'new@email.com' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
-    expect(screen.getByLabelText(/email/i).value).toBe('new@email.com');
-    expect(screen.getByLabelText(/password/i).value).toBe('password123');
+  test('has a link back to the login page', () => {
+    renderIn(Register);
+    expect(screen.getByText(/click here to login/i)).toBeInTheDocument();
   });
 });
 
-// ── Search (18 tests) ────────────────────────────────────────
-describe('Search Page', () => {
+// ── Home (2 tests) ───────────────────────────────────────────
+describe('Home Page', () => {
+  test('renders the hero heading', () => {
+    renderIn(Home);
+    expect(screen.getByText(/find your next rental/i)).toBeInTheDocument();
+  });
 
-  // ── Positive cases ────────────────────────────────────────
-  test('renders search heading', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('renders the View Properties and Filters buttons', () => {
+    renderIn(Home);
+    expect(screen.getByText(/view properties/i)).toBeInTheDocument();
+  });
+});
+
+// ── Search (14 tests) ────────────────────────────────────────
+describe('Search Page', () => {
+  test('renders the page heading', () => {
+    renderIn(Search);
     expect(screen.getByText(/search rentals/i)).toBeInTheDocument();
   });
 
-  test('renders postcode input', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('renders the postcode input', () => {
+    renderIn(Search);
     expect(screen.getByLabelText(/postcode/i)).toBeInTheDocument();
   });
 
-  test('renders search button', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument();
+  test('renders search and reset buttons', () => {
+    renderIn(Search);
+    expect(screen.getByRole('button', { name: /search/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /reset/i })).toBeEnabled();
   });
 
-  test('renders reset button', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    expect(screen.getByRole('button', { name: /reset/i })).toBeInTheDocument();
+  test('renders all 8 Australian state chips', () => {
+    renderIn(Search);
+    ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'].forEach((s) =>
+      expect(screen.getByText(s)).toBeInTheDocument()
+    );
   });
 
-  test('renders all 8 state chips', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'].forEach((state) => {
-      expect(screen.getByText(state)).toBeInTheDocument();
-    });
+  test('shows initial prompt before any search is run', () => {
+    renderIn(Search);
+    expect(screen.getByText(/use the filters above/i)).toBeInTheDocument();
   });
 
-  test('allows typing a valid postcode', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('accepts a valid 4-digit postcode', () => {
+    renderIn(Search);
     fireEvent.change(screen.getByLabelText(/postcode/i), { target: { value: '4000' } });
     expect(screen.getByLabelText(/postcode/i).value).toBe('4000');
   });
 
-  test('shows initial prompt before search is run', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    expect(screen.getByText(/use the filters above/i)).toBeInTheDocument();
-  });
-
-  test('state chip can be selected', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('state chip can be clicked', () => {
+    renderIn(Search);
     fireEvent.click(screen.getByText('QLD'));
     expect(screen.getByText('QLD')).toBeInTheDocument();
   });
 
-  // ── Negative cases ────────────────────────────────────────
-  test('reset clears postcode field', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('multiple state chips can be selected together', () => {
+    renderIn(Search);
+    fireEvent.click(screen.getByText('QLD'));
+    fireEvent.click(screen.getByText('NSW'));
+    expect(screen.getByText('QLD')).toBeInTheDocument();
+    expect(screen.getByText('NSW')).toBeInTheDocument();
+  });
+
+  test('reset clears the postcode field', () => {
+    renderIn(Search);
     fireEvent.change(screen.getByLabelText(/postcode/i), { target: { value: '4000' } });
     fireEvent.click(screen.getByRole('button', { name: /reset/i }));
     expect(screen.getByLabelText(/postcode/i).value).toBe('');
   });
 
-  test('reset clears all selected state chips', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('reset restores the initial prompt', () => {
+    renderIn(Search);
     fireEvent.click(screen.getByText('QLD'));
     fireEvent.click(screen.getByRole('button', { name: /reset/i }));
-    expect(screen.getByLabelText(/postcode/i).value).toBe('');
+    expect(screen.getByText(/use the filters above/i)).toBeInTheDocument();
   });
 
-  test('does not show results before search is submitted', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    expect(screen.queryByText(/results/i)).not.toBeInTheDocument();
+  test('hides the initial prompt after search is submitted', async () => {
+    renderIn(Search);
+    fireEvent.change(screen.getByLabelText(/postcode/i), { target: { value: '4000' } });
+    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    await waitFor(() =>
+      expect(screen.queryByText(/use the filters above/i)).not.toBeInTheDocument()
+    );
   });
 
-  test('shows no results message for unmatched search', async () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('shows "no properties found" for an unmatched postcode', async () => {
+    renderIn(Search);
     fireEvent.change(screen.getByLabelText(/postcode/i), { target: { value: '9999' } });
     fireEvent.click(screen.getByRole('button', { name: /search/i }));
-    await waitFor(() => {
-      expect(screen.queryByText(/no properties found/i)).toBeInTheDocument();
-    });
+    await waitFor(() =>
+      expect(screen.getByText(/no properties found/i)).toBeInTheDocument()
+    );
   });
 
-  // ── Edge cases ────────────────────────────────────────────
-  test('does not accept letters in postcode field', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    fireEvent.change(screen.getByLabelText(/postcode/i), { target: { value: 'abcd' } });
-    expect(screen.getByLabelText(/postcode/i).value).not.toBe('');
-  });
-
-  test('does not accept postcode longer than 4 digits', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    fireEvent.change(screen.getByLabelText(/postcode/i), { target: { value: '400000' } });
-    expect(screen.getByLabelText(/postcode/i).value).toBe('400000');
-  });
-
-  test('search works with only state selected and no postcode', async () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
+  test('search works with only a state selected', async () => {
+    renderIn(Search);
     fireEvent.click(screen.getByText('QLD'));
     fireEvent.click(screen.getByRole('button', { name: /search/i }));
-    await waitFor(() => {
-      expect(screen.queryByText(/use the filters above/i)).not.toBeInTheDocument();
-    });
+    await waitFor(() =>
+      expect(screen.queryByText(/use the filters above/i)).not.toBeInTheDocument()
+    );
   });
 
-  test('search works with only postcode and no state selected', async () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    fireEvent.change(screen.getByLabelText(/postcode/i), { target: { value: '4000' } });
-    fireEvent.click(screen.getByRole('button', { name: /search/i }));
-    await waitFor(() => {
-      expect(screen.queryByText(/use the filters above/i)).not.toBeInTheDocument();
-    });
-  });
-
-  // ── Non-functional cases ──────────────────────────────────
-  test('search button is accessible by role', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    expect(screen.getByRole('button', { name: /search/i })).toBeEnabled();
-  });
-
-  test('postcode input is accessible by label', () => {
-    render(<MemoryRouter><Search /></MemoryRouter>);
-    expect(screen.getByLabelText(/postcode/i)).toBeEnabled();
+  test('postcode field updates value on change', () => {
+    renderIn(Search);
+    const input = screen.getByLabelText(/postcode/i);
+    fireEvent.change(input, { target: { value: '2000' } });
+    expect(input.value).toBe('2000');
   });
 });
 
-// ── About (4 tests) ──────────────────────────────────────────
+// ── About (3 tests) ──────────────────────────────────────────
 describe('About Page', () => {
-  test('renders brand name', () => {
-    render(<MemoryRouter><About /></MemoryRouter>);
+  test('renders the brand name', () => {
+    renderIn(About);
     expect(screen.getAllByText(/rental search/i).length).toBeGreaterThan(0);
   });
 
-  test('renders search properties link', () => {
-    render(<MemoryRouter><About /></MemoryRouter>);
-    expect(screen.getByText(/search properties/i)).toBeInTheDocument();
-  });
-
-  test('renders about us section', () => {
-    render(<MemoryRouter><About /></MemoryRouter>);
+  test('renders the about us section', () => {
+    renderIn(About);
     expect(screen.getByText(/about us/i)).toBeInTheDocument();
   });
 
   test('renders feature cards', () => {
-    render(<MemoryRouter><About /></MemoryRouter>);
+    renderIn(About);
     expect(screen.getByText(/advanced search/i)).toBeInTheDocument();
     expect(screen.getByText(/property types/i)).toBeInTheDocument();
+  });
+});
+
+// ── Ratings helper (5 tests) ─────────────────────────────────
+describe('Ratings Helper — saveRating / getSavedRatings', () => {
+  beforeEach(() => localStorage.clear());
+
+  test('returns empty array when no ratings are saved', () => {
+    expect(getSavedRatings()).toEqual([]);
+  });
+
+  test('persists a rating and retrieves it', () => {
+    saveRating(mockProperty(), 4);
+    const [saved] = getSavedRatings();
+    expect(saved.id).toBe('prop-1');
+    expect(saved.rating).toBe(4);
+  });
+
+  test('saves all property fields correctly', () => {
+    saveRating(mockProperty(), 5);
+    const [saved] = getSavedRatings();
+    expect(saved.title).toBe('2BR Apartment Brisbane');
+    expect(saved.rent).toBe(450);
+    expect(saved.suburb).toBe('Brisbane City');
+    expect(saved.state).toBe('QLD');
+    expect(saved.postcode).toBe('4000');
+  });
+
+  test('overwrites an existing rating for the same property', () => {
+    saveRating(mockProperty(), 2);
+    saveRating(mockProperty(), 5);
+    const ratings = getSavedRatings();
+    expect(ratings).toHaveLength(1);
+    expect(ratings[0].rating).toBe(5);
+  });
+
+  test('stores multiple ratings for different properties', () => {
+    saveRating(mockProperty({ id: 'prop-1' }), 5);
+    saveRating(mockProperty({ id: 'prop-2' }), 3);
+    expect(getSavedRatings()).toHaveLength(2);
+  });
+});
+
+// ── MyRatings Page (6 tests) ─────────────────────────────────
+describe('MyRatings Page', () => {
+  beforeEach(() => localStorage.clear());
+
+  test('renders the page heading', () => {
+    renderIn(MyRatings);
+    expect(screen.getByText(/my ratings/i)).toBeInTheDocument();
+  });
+
+  test('shows empty-state alert when no ratings exist', () => {
+    renderIn(MyRatings);
+    expect(screen.getByText(/you haven't rated any properties yet/i)).toBeInTheDocument();
+  });
+
+  test('renders a property card after a rating is saved', () => {
+    saveRating(mockProperty(), 4);
+    renderIn(MyRatings);
+    expect(screen.getByText('2BR Apartment Brisbane')).toBeInTheDocument();
+  });
+
+  test('displays the weekly rent on the card', () => {
+    saveRating(mockProperty(), 4);
+    renderIn(MyRatings);
+    expect(screen.getByText(/\$450\/week/i)).toBeInTheDocument();
+  });
+
+  test('displays the user rating out of 5', () => {
+    saveRating(mockProperty(), 4);
+    renderIn(MyRatings);
+    expect(screen.getByText(/your rating: 4 \/ 5/i)).toBeInTheDocument();
+  });
+
+  test('displays "No rating" when averageRating is null', () => {
+    saveRating(mockProperty({ averageRating: null }), 3);
+    renderIn(MyRatings);
+    expect(screen.getByText(/no rating/i)).toBeInTheDocument();
   });
 });

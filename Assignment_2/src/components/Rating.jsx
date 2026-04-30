@@ -50,10 +50,15 @@ export default function RatingDialog({ property, open, onClose }) {
       });
       const json = await res.json();
       if (json.error) throw new Error(json.message);
+
+      saveRating(property, rating);
+
+      // Notify MyRatings that localStorage has been updated
+      window.dispatchEvent(new Event("ratingsUpdated"));
+
       setSuccess(true);
       setExistingRating(rating);
       setError(null);
-      saveRating(property, rating);
     } catch (err) {
       setError(err.message || "Failed to submit rating.");
     }
@@ -84,12 +89,10 @@ export default function RatingDialog({ property, open, onClose }) {
               📍 {property?.suburb}, {property?.state} {property?.postcode}
             </Typography>
 
-            {/* Show average rating */}
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               ⭐ Average rating: {property?.averageRating ?? "No ratings yet"} ({property?.numRatings ?? 0} reviews)
             </Typography>
 
-            {/* Show existing rating */}
             {existingRating && !success && (
               <Alert severity="info" sx={{ mb: 2 }}>
                 You previously rated this property {existingRating} star{existingRating !== 1 ? "s" : ""}. Submitting will update your rating.

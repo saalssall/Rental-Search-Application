@@ -1,10 +1,16 @@
 import 'dotenv/config';
 import cors from 'cors';
-import userRouter from './routes/user.js';
 import express from 'express';
+import https from 'node:https';
+import fs from 'node:fs';
+
+import userRouter from './routes/user.js';
+import statesRouter from './routes/states.js';
+import apiRouter from './routes/api.js';
+import propertyTypesRouter from './routes/property-types.js';
+
 import knex from 'knex';
 import knexConfig from './knexfile.js';
-import apiRouter from './routes/api.js';
 import morgan from 'morgan';
 import swaggerUI from 'swagger-ui-express';
 import swaggerDocument from './docs/rentals-openapi.json' with { type: 'json' };
@@ -36,6 +42,8 @@ app.get('/docs', swaggerUI.setup(swaggerDocument));
 
 app.use('/api', apiRouter);
 app.use('/user', userRouter);
+app.use('/rentals/states', statesRouter);
+app.use('/rentals/property-types', propertyTypesRouter);
 
 // to be removed later, just to test the connection
 app.get("/knex", (req, res, next) => {
@@ -54,6 +62,11 @@ app.get('/', (req, res) => {
     res.send('Hello world');
 });
 
-app.listen(port, () => {
-    console.log(`Server listening on http://localhost:${port}`);
+const credentials = {
+    key: fs.readFileSync('./certs/selfsigned.key'),
+    cert: fs.readFileSync('./certs/selfsigned.crt')
+}
+
+https.createServer(credentials, app).listen(port, () => {
+    console.log(`Server listening on https://localhost:${port}`);
 });

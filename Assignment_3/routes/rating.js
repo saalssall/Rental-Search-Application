@@ -18,7 +18,6 @@ router.post('/debugEraseRatings', (req, res, next) => {
 router.get('/rentals/:id', authorisation, (req, res, next) => {
     const { id } = req.params;
 
-    // Check if rating exists for this rental
     req.db.from("ratings").select("*").where("rentalId", "=", id)
         .then(ratings => {
             if (ratings.length === 0) {
@@ -28,7 +27,15 @@ router.get('/rentals/:id', authorisation, (req, res, next) => {
                 });
                 return;
             }
-            res.status(200).json(ratings);
+
+            const result = ratings.map(r => {
+                const response = { rentalId: r.rentalId, rating: r.rating};
+                if (r.comment) response.comment = r.comment;
+                response.dateTime = r.dateTime;
+                return response;
+            });
+
+            res.status(200).json(result);
         })
         .catch(err => {
             console.log(err);
